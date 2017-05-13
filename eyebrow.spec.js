@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const parse = require('./parse')
 const markdown = require('./markdown')
+const template = require('./template')
 
 var chai = require('chai')
 var dirtyChai = require('dirty-chai')
@@ -52,5 +53,37 @@ describe('parse', () => {
   it('correctly converts markdown to HTML', () => {
     const result = markdown(EXPECTED_MARKDOWN)
     expect(result).to.equal('<p>Hello world! How <em>are</em> you today.</p>\n<p>Here are some tricky characters: &lt;&gt;&amp;;\'&quot;汉漢!?[]/.,</p>\n')
+  })
+
+  it('correctly renders a template', () => {
+    const view = {
+      title: 'Title',
+      heading: 'Heading',
+      content: () => {
+        return markdown(EXPECTED_MARKDOWN)
+      }
+    }
+    const output = template(`<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{title}}</title>
+  <style>{{css}}</style>
+</head>
+<body>
+{{{content}}}
+</body>
+</html>`, view)
+    expect(output).to.equal(`<html>
+<head>
+  <meta charset="utf-8">
+  <title>Title</title>
+  <style></style>
+</head>
+<body>
+<p>Hello world! How <em>are</em> you today.</p>
+<p>Here are some tricky characters: &lt;&gt;&amp;;'&quot;汉漢!?[]/.,</p>
+
+</body>
+</html>`)
   })
 })
