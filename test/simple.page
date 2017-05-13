@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<page>
+  <title>Tove</title>
+  <heading>Hello</heading>
+  <content>
+    <markdown><![CDATA[
+Hello world! How *are* you today.
+
+Here are some tricky characters: <>&;'"汉漢!?[]/.,
+]]></markdown>
+    <code src="./example.py" highlight="python" link="true"/>
+  </content>
+</page>

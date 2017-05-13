@@ -1,0 +1,45 @@
+{
+  "name": "eyebrow",
+  "version": "0.1.0",
+  "description": "Simplest possible site software",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test nyc -x '*.spec.js' mocha '*.spec.js'",
+    "test:quick": "NODE_ENV=test mocha '*.spec.js'",
+    "start": "node server.js",
+    "lint": "standard",
+    "fix": "npm run lint -- --fix"
+  },
+  "standard": {
+    "globals": [
+      "fetch",
+      "Headers",
+      "describe",
+      "it",
+      "beforeEach",
+      "afterEach"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thejimmyg/eyebrow.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/thejimmyg/eyebrow/issues"
+  },
+  "homepage": "https://github.com/thejimmyg/eyebrow#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "dirty-chai": "^1.2.2",
+    "mocha": "^3.3.0",
+    "nyc": "^10.3.2",
+    "sinon": "^2.2.0",
+    "standard": "^10.0.2"
+  },
+  "dependencies": {
+    "commonmark": "^0.27.0",
+    "libxmljs": "^0.18.4"
+  }
+}
