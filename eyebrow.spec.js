@@ -1,6 +1,5 @@
-const fs = require('fs')
-const path = require('path')
 const parse = require('./parse')
+const path = require('path')
 const markdown = require('./markdown')
 const template = require('./template')
 const command = require('./command')
@@ -15,7 +14,7 @@ const logMessages = []
 const log = (...args) => { logMessages.push(args) }
 // const logError = log
 
-describe('parse', () => {
+describe('eyebrow', () => {
   let sandbox
 
   beforeEach(function () {
@@ -38,17 +37,23 @@ describe('parse', () => {
     }
   })
 
+  it('cannot render a page that does not exist', async () => {
+    let caught = false
+    try {
+      await parse(path.join(__dirname, 'test', 'www', 'doesnotexist.page'))
+    } catch (e) {
+      caught = true
+      expect(e.message).to.equal(`ENOENT: no such file or directory, open '${__dirname}/test/www/doesnotexist.page'`)
+    }
+    expect(caught).to.be.true()
+  })
+
   const EXPECTED_MARKDOWN = '\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
-  it('correctly parses test/simple.page', (done) => {
-    fs.readFile(path.join(__dirname, 'test/simple.page'), {encoding: 'utf8'}, (err, page) => {
-      expect(err).to.be.null('Got an error opening file')
-      log(page)
-      const {title, heading, markdown} = parse(page)
-      expect(title).to.equal(`Tove`)
-      expect(heading).to.equal(`Hello`)
-      expect(markdown).to.equal(EXPECTED_MARKDOWN)
-      done()
-    })
+  it('correctly parses test/simple.page', async () => {
+    const {title, heading, markdown} = await parse(path.join(__dirname, 'test', 'www', 'simple.page'))
+    expect(title).to.equal(`Tove`)
+    expect(heading).to.equal(`Hello`)
+    expect(markdown).to.equal(EXPECTED_MARKDOWN)
   })
 
   it('correctly converts markdown to HTML', () => {
@@ -56,7 +61,18 @@ describe('parse', () => {
     expect(result).to.equal('<p>Hello world! How <em>are</em> you today.</p>\n<p>Here are some tricky characters: &lt;&gt;&amp;;\'&quot;汉漢!?[]/.,</p>\n')
   })
 
-  it('correctly renders a template', () => {
+  it('cannot render a template that does not exist', async () => {
+    let caught = false
+    try {
+      await template(path.join(__dirname, 'test', 'template', 'doesnotexist.mustache'))
+    } catch (e) {
+      caught = true
+      expect(e.message).to.equal(`ENOENT: no such file or directory, open '${__dirname}/test/template/doesnotexist.mustache'`)
+    }
+    expect(caught).to.be.true()
+  })
+
+  it('correctly renders the main template', async () => {
     const view = {
       title: 'Title',
       heading: 'Heading',
@@ -64,17 +80,10 @@ describe('parse', () => {
         return markdown(EXPECTED_MARKDOWN)
       }
     }
-    const output = template(`<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{title}}</title>
-  <style>{{css}}</style>
-</head>
-<body>
-{{{content}}}
-</body>
-</html>`, view)
-    expect(output).to.equal(`<html>
+    const output = await template(path.join(__dirname, 'test', 'template', 'main.mustache'), view)
+    log(output)
+    expect(output).to.equal(`<!DOCTYPE HTML PUBLIC>
+<html>
 <head>
   <meta charset="utf-8">
   <title>Title</title>
@@ -85,32 +94,43 @@ describe('parse', () => {
 <p>Here are some tricky characters: &lt;&gt;&amp;;'&quot;汉漢!?[]/.,</p>
 
 </body>
-</html>`)
+</html>
+`)
   })
 
   const PRIVATE_KEY_TEST = `-----BEGIN PRIVATE KEY-----
-... Test file only ...
+... Test private key ...
 -----END PRIVATE KEY-----
 `
   const CERTIFICATE_TEST = `-----BEGIN CERTIFICATE-----
-... Test file only ...
+... Test certificate ...
 -----END CERTIFICATE-----
 -----BEGIN CERTIFICATE-----
-... Test file only ...
+... Test certificate ...
 -----END CERTIFICATE-----
 `
-
+  const PRIVATE_KEY_DEFAULT = `-----BEGIN PRIVATE KEY-----
+... Default private key ...
+-----END PRIVATE KEY-----
+`
+  const CERTIFICATE_DEFAULT = `-----BEGIN CERTIFICATE-----
+... Default certificate ...
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+... Default certificate ...
+-----END CERTIFICATE-----
+`
   it('parses command line arguments correctly', () => {
     expect(command(['node', 'eyebrow'])).to.deep.equal({
-      key: PRIVATE_KEY_TEST,
-      cert: CERTIFICATE_TEST,
+      key: PRIVATE_KEY_DEFAULT,
+      cert: CERTIFICATE_DEFAULT,
       port: 80,
       httpsPort: 443
     })
     expect(command([
       'node', 'eyebrow',
-      '-c', 'certificate.pem',
-      '-k', 'private.key',
+      '-c', 'test/config/certificate.pem',
+      '-k', 'test/config/private.key',
       '-p', '8080',
       '-s', '8443'
     ])).to.deep.equal({
@@ -126,5 +146,8 @@ describe('parse', () => {
     //   port: 80,
     //   httpsPort: 443
     // })
+  })
+  it('resolves a file to a path, choose the correct templates and renderers', () => {
+
   })
 })

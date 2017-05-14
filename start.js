@@ -1,5 +1,4 @@
 const express = require('express')
-const fs = require('fs')
 const http = require('http')
 const path = require('path')
 const spdy = require('spdy')
@@ -31,33 +30,19 @@ const redirectorHandler = (req, res, next) => {
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
-app.get('/', (req, res) => {
-  fs.readFile(path.join(__dirname, 'test/simple.page'), {encoding: 'utf8'}, (err, page) => {
-    if (err) {
-      return res.error('Internal server error')
+app.get('/', async (req, res) => {
+  const {title, heading, markdown} = await parse(path.join(__dirname, 'test', 'www', 'simple.page'))
+  const view = {
+    title,
+    heading,
+    content: () => {
+      return markdownRender(markdown)
     }
-    const {title, heading, markdown} = parse(page)
-    const view = {
-      title,
-      heading,
-      content: () => {
-        return markdownRender(markdown)
-      }
-    }
-    const html = template(`<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{title}}</title>
-  <style>{{css}}</style>
-</head>
-<body>
-{{{content}}}
-</body>
-</html>`, view)
-    res
-    .status(200)
-    .send(html)
-  })
+  }
+  const html = await template(path.join(__dirname, 'test', 'template', 'main.mustache'), view)
+  res
+  .status(200)
+  .send(html)
 })
 
 const options = {key, cert}
