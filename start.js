@@ -1,14 +1,16 @@
 const express = require('express')
 const http = require('http')
+const fs = require('fs')
 const path = require('path')
 const spdy = require('spdy')
 
 const command = require('./command')
 const markdownRender = require('./markdown')
 const parse = require('./parse')
-const template = require('./template')
+const templateRender = require('./template')
 
-const {key, cert, port, httpsPort} = command(process.argv)
+const {key, cert, port, httpsPort, theme, template, content} = command(process.argv)
+const contentDir = content
 
 const redirectorHandler = (req, res, next) => {
   if (req.hostname.substr(0, 4) !== 'www.' || req.protocol !== 'https') {
@@ -30,20 +32,47 @@ const redirectorHandler = (req, res, next) => {
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
-app.get('/', async (req, res) => {
-  const {title, heading, markdown} = await parse(path.join(__dirname, 'test', 'www', 'simple.page'))
+app.get('*', async (req, res, next) => {
+  console.log(req.url)
+  const contentPath = req.url.substring(1, req.url.length)
+  console.log(path.join(contentDir, contentPath))
+  let stat
+  try {
+    stat = fs.statSync(path.join(contentDir, contentPath))
+  } catch (e) {
+    return next()
+  }
+  let result
+  if (stat.isDirectory()) {
+    result = await parse(path.join(contentDir, contentPath, 'index'), ['content'])
+  } else {
+    result = await parse(path.join(contentDir, contentPath), ['content'])
+  }
+  const {type, title, heading, content} = result
   const view = {
     title,
     heading,
     content: () => {
-      return markdownRender(markdown)
+      let result = ''
+      for (let i = 0; i < content.length; i++) {
+        const [type, value] = content[i]
+        switch (type) {
+          case 'markdown':
+            result += markdownRender(value)
+            break
+          default:
+            throw new Error(`Unknown block type ${type} in region 'content'`)
+        }
+      }
+      return result
     }
   }
-  const html = await template(path.join(__dirname, 'test', 'template', 'main.mustache'), view)
+  const html = await templateRender(path.join(template, type + '.mustache'), view)
   res
   .status(200)
   .send(html)
 })
+app.use(express.static(theme))
 
 const options = {key, cert}
 

@@ -2,9 +2,13 @@
 <page>
   <title>Tove</title>
   <heading>Hello</heading>
-  <markdown><![CDATA[
+  <content>
+    <markdown><![CDATA[
+# Heading
+
 Hello world! How *are* you today.
 
 Here are some tricky characters: <>&;'"汉漢!?[]/.,
 ]]></markdown>
+  </content>
 </page>

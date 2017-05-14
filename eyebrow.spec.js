@@ -40,25 +40,43 @@ describe('eyebrow', () => {
   it('cannot render a page that does not exist', async () => {
     let caught = false
     try {
-      await parse(path.join(__dirname, 'test', 'www', 'doesnotexist.page'))
+      await parse(path.join(__dirname, 'test', 'content', 'doesnotexist'), ['content'])
     } catch (e) {
       caught = true
-      expect(e.message).to.equal(`ENOENT: no such file or directory, open '${__dirname}/test/www/doesnotexist.page'`)
+      expect(e.message).to.equal(`ENOENT: no such file or directory, open '${__dirname}/test/content/doesnotexist'`)
     }
     expect(caught).to.be.true()
   })
 
-  const EXPECTED_MARKDOWN = '\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
-  it('correctly parses test/simple.page', async () => {
-    const {title, heading, markdown} = await parse(path.join(__dirname, 'test', 'www', 'simple.page'))
+  it('disallows type, title and heading as page regions', async () => {
+    const disallowed = ['type', 'title', 'heading']
+    for (let i = 0; i < disallowed.length; i++) {
+      let caught = false
+      const reserved = disallowed[i]
+      try {
+        await parse(path.join(__dirname, 'test', 'content', 'simple'), [reserved])
+      } catch (e) {
+        caught = true
+        expect(e.message).to.equal(`'${reserved}' is reserved and cannot be used as a region name`)
+      }
+      expect(caught).to.be.true()
+    }
+  })
+
+  const EXPECTED_MARKDOWN = '\n# Heading\n\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
+  it('correctly parses test/simple', async () => {
+    const result = await parse(path.join(__dirname, 'test', 'content', 'simple'), ['content'])
+    expect(Object.keys(result).sort()).to.deep.equal(['type', 'title', 'heading', 'content'].sort())
+    const {type, title, heading, content} = result
     expect(title).to.equal(`Tove`)
+    expect(type).to.equal(`page`)
     expect(heading).to.equal(`Hello`)
-    expect(markdown).to.equal(EXPECTED_MARKDOWN)
+    expect(content).to.deep.equal([['markdown', EXPECTED_MARKDOWN]])
   })
 
   it('correctly converts markdown to HTML', () => {
     const result = markdown(EXPECTED_MARKDOWN)
-    expect(result).to.equal('<p>Hello world! How <em>are</em> you today.</p>\n<p>Here are some tricky characters: &lt;&gt;&amp;;\'&quot;汉漢!?[]/.,</p>\n')
+    expect(result).to.equal('<h2>Heading</h2>\n<p>Hello world! How <em>are</em> you today.</p>\n<p>Here are some tricky characters: &lt;&gt;&amp;;\'&quot;汉漢!?[]/.,</p>\n')
   })
 
   it('cannot render a template that does not exist', async () => {
@@ -90,6 +108,7 @@ describe('eyebrow', () => {
   <style></style>
 </head>
 <body>
+<h2>Heading</h2>
 <p>Hello world! How <em>are</em> you today.</p>
 <p>Here are some tricky characters: &lt;&gt;&amp;;'&quot;汉漢!?[]/.,</p>
 
@@ -125,20 +144,31 @@ describe('eyebrow', () => {
       key: PRIVATE_KEY_DEFAULT,
       cert: CERTIFICATE_DEFAULT,
       port: 80,
-      httpsPort: 443
+      httpsPort: 443,
+      content: path.join(__dirname, 'content'),
+      template: path.join(__dirname, 'template'),
+      theme: path.join(__dirname, 'theme')
     })
     expect(command([
       'node', 'eyebrow',
-      '-c', 'test/config/certificate.pem',
+      '-r', 'test/config/certificate.pem',
       '-k', 'test/config/private.key',
       '-p', '8080',
-      '-s', '8443'
+      '-s', '8443',
+      '-c', 'test/config/content',
+      '-t', 'test/config/template',
+      '-e', 'test/config/theme'
     ])).to.deep.equal({
       key: PRIVATE_KEY_TEST,
       cert: CERTIFICATE_TEST,
       port: '8080',
-      httpsPort: '8443'
+      httpsPort: '8443',
+      content: 'test/config/content',
+      template: 'test/config/template',
+      theme: 'test/config/theme'
     })
+    // Note: It is possible to set the theme and template directories to the same place if you like.
+
     // This calls exit, so we can't test
     // expect(command(['node', 'eyebrow', '-h'])).to.deep.equal({
     //   key: PRIVATE_KEY_TEST,
