@@ -32,7 +32,7 @@ const redirectorHandler = (req, res, next) => {
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
-app.use(express.static(theme))
+app.use(express.static(theme, {index: false}))
 app.get('*', async (req, res, next) => {
   console.log(req.url)
   const contentPath = req.url.substring(1, req.url.length)
