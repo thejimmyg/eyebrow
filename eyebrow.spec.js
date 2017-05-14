@@ -3,6 +3,7 @@ const path = require('path')
 const parse = require('./parse')
 const markdown = require('./markdown')
 const template = require('./template')
+const command = require('./command')
 
 var chai = require('chai')
 var dirtyChai = require('dirty-chai')
@@ -85,5 +86,45 @@ describe('parse', () => {
 
 </body>
 </html>`)
+  })
+
+  const PRIVATE_KEY_TEST = `-----BEGIN PRIVATE KEY-----
+... Test file only ...
+-----END PRIVATE KEY-----
+`
+  const CERTIFICATE_TEST = `-----BEGIN CERTIFICATE-----
+... Test file only ...
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+... Test file only ...
+-----END CERTIFICATE-----
+`
+
+  it('parses command line arguments correctly', () => {
+    expect(command(['node', 'eyebrow'])).to.deep.equal({
+      key: PRIVATE_KEY_TEST,
+      cert: CERTIFICATE_TEST,
+      port: 80,
+      httpsPort: 443
+    })
+    expect(command([
+      'node', 'eyebrow',
+      '-c', 'certificate.pem',
+      '-k', 'private.key',
+      '-p', '8080',
+      '-s', '8443'
+    ])).to.deep.equal({
+      key: PRIVATE_KEY_TEST,
+      cert: CERTIFICATE_TEST,
+      port: '8080',
+      httpsPort: '8443'
+    })
+    // This calls exit, so we can't test
+    // expect(command(['node', 'eyebrow', '-h'])).to.deep.equal({
+    //   key: PRIVATE_KEY_TEST,
+    //   cert: CERTIFICATE_TEST,
+    //   port: 80,
+    //   httpsPort: 443
+    // })
   })
 })
