@@ -54,7 +54,7 @@ describe('eyebrow', () => {
       let caught = false
       const reserved = disallowed[i]
       try {
-        await parse(path.join(__dirname, 'test', 'content', 'simple'), [reserved])
+        await parse(path.join(__dirname, 'test', 'content', 'index'), [reserved])
       } catch (e) {
         caught = true
         expect(e.message).to.equal(`'${reserved}' is reserved and cannot be used as a region name`)
@@ -64,8 +64,8 @@ describe('eyebrow', () => {
   })
 
   const EXPECTED_MARKDOWN = '\n# Heading\n\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
-  it('correctly parses test/simple', async () => {
-    const result = await parse(path.join(__dirname, 'test', 'content', 'simple'), ['content'])
+  it('correctly parses test/index', async () => {
+    const result = await parse(path.join(__dirname, 'test', 'content', 'index'), ['content'])
     expect(Object.keys(result).sort()).to.deep.equal(['type', 'title', 'heading', 'content'].sort())
     const {type, title, heading, content} = result
     expect(title).to.equal(`Tove`)
@@ -98,7 +98,7 @@ describe('eyebrow', () => {
         return markdown(EXPECTED_MARKDOWN)
       }
     }
-    const output = await template(path.join(__dirname, 'test', 'template', 'main.mustache'), view)
+    const output = await template(path.join(__dirname, 'test', 'template', 'page.mustache'), view)
     log(output)
     expect(output).to.equal(`<!DOCTYPE HTML PUBLIC>
 <html>

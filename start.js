@@ -32,6 +32,7 @@ const redirectorHandler = (req, res, next) => {
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
+app.use(express.static(theme))
 app.get('*', async (req, res, next) => {
   console.log(req.url)
   const contentPath = req.url.substring(1, req.url.length)
@@ -72,26 +73,30 @@ app.get('*', async (req, res, next) => {
   .status(200)
   .send(html)
 })
-app.use(express.static(theme))
 
 const options = {key, cert}
 
-spdy
-.createServer(options, app)
-.listen(httpsPort, (error) => {
-  if (error) {
-    console.error(error)
-    return process.exit(1)
-  } else {
-    console.log(`Listening for HTTPS and HTTP 2 requests on port: ${httpsPort}`)
-  }
-})
+try {
+  spdy
+  .createServer(options, app)
+  .listen(httpsPort, (error) => {
+    if (error) {
+      console.error(error)
+      return process.exit(1)
+    } else {
+      console.log(`Listening for HTTPS and HTTP 2 requests on port ${httpsPort}`)
+    }
+  })
+} catch (e) {
+  console.error(e)
+  console.error(`Could not serve HTTPS on port ${httpsPort}`)
+}
 
 http.createServer(app).listen(port, (error) => {
   if (error) {
     console.error(error)
     return process.exit(1)
   } else {
-    console.log(`Listening for HTTP requests on port: ${port}`)
+    console.log(`Listening for HTTP requests on port ${port}`)
   }
 })
