@@ -6,10 +6,9 @@
   "scripts": {
     "test": "NODE_ENV=test nyc -x '*.spec.js' mocha '*.spec.js'",
     "test:quick": "NODE_ENV=test mocha '*.spec.js'",
-    "start": "node server.js",
+    "start": "node start.js",
     "lint": "standard",
-    "fix": "npm run lint -- --fix",
-    "start": "node start.js"
+    "fix": "npm run lint -- --fix"
   },
   "standard": {
     "globals": [
@@ -42,6 +41,7 @@
   "dependencies": {
     "commander": "^2.9.0",
     "commonmark": "^0.27.0",
+    "cors": "^2.8.3",
     "express": "^4.15.2",
     "libxmljs": "^0.18.4",
     "mustache": "^2.3.0",

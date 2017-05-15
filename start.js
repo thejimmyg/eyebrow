@@ -3,6 +3,7 @@ const http = require('http')
 const fs = require('fs')
 const path = require('path')
 const spdy = require('spdy')
+const cors = require('cors')
 
 const command = require('./command')
 const markdownRender = require('./markdown')
@@ -38,7 +39,7 @@ app.disable('x-powered-by')
 app.all('*', redirectorHandler)
 app.use(express.static(theme, {index: false}))
 if (gzip) {
-  app.use(express.static(gzip, {setHeaders, index: false}))
+  app.use(cors(), express.static(gzip, {setHeaders, index: false}))
 }
 app.get('*', async (req, res, next) => {
   console.log(req.url)
