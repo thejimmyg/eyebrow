@@ -9,7 +9,7 @@ const markdownRender = require('./markdown')
 const parse = require('./parse')
 const templateRender = require('./template')
 
-const {key, cert, port, httpsPort, theme, template, content} = command(process.argv)
+const {key, cert, port, httpsPort, theme, template, content, gzip} = command(process.argv)
 const contentDir = content
 
 const redirectorHandler = (req, res, next) => {
@@ -29,10 +29,17 @@ const redirectorHandler = (req, res, next) => {
   }
 }
 
+function setHeaders (res, path, stat) {
+  res.setHeader('Content-Encoding', 'gzip')
+}
+
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
 app.use(express.static(theme, {index: false}))
+if (gzip) {
+  app.use(express.static(gzip, {setHeaders, index: false}))
+}
 app.get('*', async (req, res, next) => {
   console.log(req.url)
   const contentPath = req.url.substring(1, req.url.length)

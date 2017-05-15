@@ -147,7 +147,9 @@ describe('eyebrow', () => {
       httpsPort: 443,
       content: path.join(__dirname, 'content'),
       template: path.join(__dirname, 'template'),
-      theme: path.join(__dirname, 'theme')
+      theme: path.join(__dirname, 'theme'),
+      gzip: undefined
+
     })
     expect(command([
       'node', 'eyebrow',
@@ -157,7 +159,8 @@ describe('eyebrow', () => {
       '-s', '8443',
       '-c', 'test/config/content',
       '-t', 'test/config/template',
-      '-e', 'test/config/theme'
+      '-e', 'test/config/theme',
+      '-g', 'test/config/gzip'
     ])).to.deep.equal({
       key: PRIVATE_KEY_TEST,
       cert: CERTIFICATE_TEST,
@@ -165,7 +168,8 @@ describe('eyebrow', () => {
       httpsPort: '8443',
       content: 'test/config/content',
       template: 'test/config/template',
-      theme: 'test/config/theme'
+      theme: 'test/config/theme',
+      gzip: 'test/config/gzip'
     })
     // Note: It is possible to set the theme and template directories to the same place if you like.
 
