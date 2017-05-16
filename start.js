@@ -10,7 +10,16 @@ const markdownRender = require('./markdown')
 const parse = require('./parse')
 const templateRender = require('./template')
 
-const {key, cert, port, httpsPort, theme, template, content, gzip} = command(process.argv)
+const commandOptions = {
+  addExtraOptions (program) {
+    program.option('-g, --gzip [dir]', `Directory of gzipped assets to be served with CORS support an extra Content-Encoding: gzip header`)
+  },
+  processResult (program, result) {
+    // Mutate the result object as you wish
+    result.gzip = program.gzip
+  }
+}
+const {key, cert, port, httpsPort, theme, template, content, gzip} = command(process.argv, commandOptions)
 const contentDir = content
 
 const redirectorHandler = (req, res, next) => {

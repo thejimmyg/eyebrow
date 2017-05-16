@@ -2,7 +2,8 @@ const Command = require('commander').Command
 const path = require('path')
 const fs = require('fs')
 
-module.exports = (args) => {
+module.exports = (args, options) => {
+  const {addExtraOptions, processResult} = options || {}
   const program = new Command()
   program
   .version('0.1.0')
@@ -13,8 +14,10 @@ module.exports = (args) => {
   .option('-c, --content [dir]', `Directory to serve content files such as pages from, defaults to './content'`)
   .option('-t, --template [dir]', `Directory to serve mustache templates from, defaults to './template'`)
   .option('-e, --theme [dir]', `Directory to serve static files for the theme from, defaults to './theme'`)
-  .option('-g, --gzip [dir]', `Directory of gzipped assets to be served with an extra Content-Encoding: gzip header`)
-  .parse(args)
+  if (addExtraOptions) {
+    addExtraOptions(program)
+  }
+  program.parse(args)
 
   const key = fs.readFileSync(program.key || path.join(__dirname, 'private.key'), {encoding: 'utf8'})
   const cert = fs.readFileSync(program.cert || path.join(__dirname, 'certificate.pem'), {encoding: 'utf8'})
@@ -23,7 +26,9 @@ module.exports = (args) => {
   const theme = program.theme || path.join(__dirname, 'theme')
   const template = program.template || path.join(__dirname, 'template')
   const content = program.content || path.join(__dirname, 'content')
-  const gzip = program.gzip
-
-  return {key, cert, port, httpsPort, theme, template, content, gzip}
+  const result = {key, cert, port, httpsPort, theme, template, content}
+  if (processResult) {
+    processResult(program, result)
+  }
+  return result
 }

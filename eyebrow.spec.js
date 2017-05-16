@@ -139,6 +139,7 @@ describe('eyebrow', () => {
 ... Default certificate ...
 -----END CERTIFICATE-----
 `
+
   it('parses command line arguments correctly', () => {
     expect(command(['node', 'eyebrow'])).to.deep.equal({
       key: PRIVATE_KEY_DEFAULT,
@@ -147,9 +148,7 @@ describe('eyebrow', () => {
       httpsPort: 443,
       content: path.join(__dirname, 'content'),
       template: path.join(__dirname, 'template'),
-      theme: path.join(__dirname, 'theme'),
-      gzip: undefined
-
+      theme: path.join(__dirname, 'theme')
     })
     expect(command([
       'node', 'eyebrow',
@@ -159,8 +158,7 @@ describe('eyebrow', () => {
       '-s', '8443',
       '-c', 'test/config/content',
       '-t', 'test/config/template',
-      '-e', 'test/config/theme',
-      '-g', 'test/config/gzip'
+      '-e', 'test/config/theme'
     ])).to.deep.equal({
       key: PRIVATE_KEY_TEST,
       cert: CERTIFICATE_TEST,
@@ -168,8 +166,7 @@ describe('eyebrow', () => {
       httpsPort: '8443',
       content: 'test/config/content',
       template: 'test/config/template',
-      theme: 'test/config/theme',
-      gzip: 'test/config/gzip'
+      theme: 'test/config/theme'
     })
     // Note: It is possible to set the theme and template directories to the same place if you like.
 
@@ -181,7 +178,45 @@ describe('eyebrow', () => {
     //   httpsPort: 443
     // })
   })
-  it('resolves a file to a path, choose the correct templates and renderers', () => {
-
+  it('parses command line arguments correctly with extra options and processed result', () => {
+    const options = {
+      addExtraOptions (program) {
+        program.option('-g, --gzip [dir]', `Directory of gzipped assets to be served with CORS support an extra Content-Encoding: gzip header`)
+      },
+      processResult (program, result) {
+        // Mutate the result object as you wish
+        result.gzip = program.gzip
+      }
+    }
+    expect(command(['node', 'eyebrow'], options)).to.deep.equal({
+      key: PRIVATE_KEY_DEFAULT,
+      cert: CERTIFICATE_DEFAULT,
+      port: 80,
+      httpsPort: 443,
+      content: path.join(__dirname, 'content'),
+      template: path.join(__dirname, 'template'),
+      theme: path.join(__dirname, 'theme'),
+      gzip: undefined
+    })
+    expect(command([
+      'node', 'eyebrow',
+      '-r', 'test/config/certificate.pem',
+      '-k', 'test/config/private.key',
+      '-p', '8080',
+      '-s', '8443',
+      '-c', 'test/config/content',
+      '-t', 'test/config/template',
+      '-e', 'test/config/theme',
+      '-g', 'test/config/gzip'
+    ], options)).to.deep.equal({
+      key: PRIVATE_KEY_TEST,
+      cert: CERTIFICATE_TEST,
+      port: '8080',
+      httpsPort: '8443',
+      content: 'test/config/content',
+      template: 'test/config/template',
+      theme: 'test/config/theme',
+      gzip: 'test/config/gzip'
+    })
   })
 })
