@@ -8,19 +8,22 @@ const cors = require('cors')
 const command = require('./command')
 const markdownRender = require('./markdown')
 const parse = require('./parse')
-const templateRender = require('./template')
+const template = require('./template')
 
 const commandOptions = {
   addExtraOptions (program) {
     program.option('-g, --gzip [dir]', `Directory of gzipped assets to be served with CORS support an extra Content-Encoding: gzip header`)
+    program.option('-z, --gzip-cors [dir]', `Directory of gzipped assets to be served with CORS support an extra Content-Encoding: gzip header`)
+    program.option('-o, --cors [dir]', `Directory of to be served with CORS support`)
   },
   processResult (program, result) {
     // Mutate the result object as you wish
-    result.gzip = program.gzip
+    result.gzipDir = program.gzip
+    result.gzipCorsDir = program.gzipCors
+    result.corsDir = program.cors
   }
 }
-const {key, cert, port, httpsPort, theme, template, content, gzip} = command(process.argv, commandOptions)
-const contentDir = content
+const {key, cert, port, httpsPort, themeDir, templateDir, contentDir, gzipDir, corsDir, gzipCorsDir} = command(process.argv, commandOptions)
 
 const redirectorHandler = (req, res, next) => {
   if (req.hostname.substr(0, 4) !== 'www.' || req.protocol !== 'https') {
@@ -46,14 +49,19 @@ function setHeaders (res, path, stat) {
 const app = express()
 app.disable('x-powered-by')
 app.all('*', redirectorHandler)
-app.use(express.static(theme, {index: false}))
-if (gzip) {
-  app.use(cors(), express.static(gzip, {setHeaders, index: false}))
+app.use(express.static(themeDir, {index: false}))
+if (gzipDir) {
+  app.use(express.static(gzipDir, {setHeaders, index: false}))
+}
+if (gzipCorsDir) {
+  app.use(cors(), express.static(gzipCorsDir, {setHeaders, index: false}))
+}
+if (corsDir) {
+  app.use(cors(), express.static(corsDir, {index: false}))
 }
 app.get('*', async (req, res, next) => {
   console.log(req.url)
   const contentPath = req.url.substring(1, req.url.length)
-  console.log(path.join(contentDir, contentPath))
   let stat
   try {
     stat = fs.statSync(path.join(contentDir, contentPath))
@@ -85,7 +93,7 @@ app.get('*', async (req, res, next) => {
       return result
     }
   }
-  const html = await templateRender(path.join(template, type + '.mustache'), view)
+  const html = await template(path.join(templateDir, type + '.mustache'), view)
   res
   .status(200)
   .send(html)

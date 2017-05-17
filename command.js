@@ -23,10 +23,10 @@ module.exports = (args, options) => {
   const cert = fs.readFileSync(program.cert || path.join(__dirname, 'certificate.pem'), {encoding: 'utf8'})
   const port = program.port || 80
   const httpsPort = program.httpsPort || 443
-  const theme = program.theme || path.join(__dirname, 'theme')
-  const template = program.template || path.join(__dirname, 'template')
-  const content = program.content || path.join(__dirname, 'content')
-  const result = {key, cert, port, httpsPort, theme, template, content}
+  const themeDir = program.theme || path.join(__dirname, 'theme')
+  const templateDir = program.template || path.join(__dirname, 'template')
+  const contentDir = program.content || path.join(__dirname, 'content')
+  const result = {key, cert, port, httpsPort, themeDir, templateDir, contentDir}
   if (processResult) {
     processResult(program, result)
   }

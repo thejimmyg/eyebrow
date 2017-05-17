@@ -3,6 +3,7 @@ const path = require('path')
 const markdown = require('./markdown')
 const template = require('./template')
 const command = require('./command')
+const search = require('./search')
 
 var chai = require('chai')
 var dirtyChai = require('dirty-chai')
@@ -146,9 +147,9 @@ describe('eyebrow', () => {
       cert: CERTIFICATE_DEFAULT,
       port: 80,
       httpsPort: 443,
-      content: path.join(__dirname, 'content'),
-      template: path.join(__dirname, 'template'),
-      theme: path.join(__dirname, 'theme')
+      contentDir: path.join(__dirname, 'content'),
+      templateDir: path.join(__dirname, 'template'),
+      themeDir: path.join(__dirname, 'theme')
     })
     expect(command([
       'node', 'eyebrow',
@@ -164,9 +165,9 @@ describe('eyebrow', () => {
       cert: CERTIFICATE_TEST,
       port: '8080',
       httpsPort: '8443',
-      content: 'test/config/content',
-      template: 'test/config/template',
-      theme: 'test/config/theme'
+      contentDir: 'test/config/content',
+      templateDir: 'test/config/template',
+      themeDir: 'test/config/theme'
     })
     // Note: It is possible to set the theme and template directories to the same place if you like.
 
@@ -181,11 +182,11 @@ describe('eyebrow', () => {
   it('parses command line arguments correctly with extra options and processed result', () => {
     const options = {
       addExtraOptions (program) {
-        program.option('-g, --gzip [dir]', `Directory of gzipped assets to be served with CORS support an extra Content-Encoding: gzip header`)
+        program.option('-x, --extra-info [dir]', `Extra information`)
       },
       processResult (program, result) {
         // Mutate the result object as you wish
-        result.gzip = program.gzip
+        result.extraInfo = program.extraInfo
       }
     }
     expect(command(['node', 'eyebrow'], options)).to.deep.equal({
@@ -193,10 +194,10 @@ describe('eyebrow', () => {
       cert: CERTIFICATE_DEFAULT,
       port: 80,
       httpsPort: 443,
-      content: path.join(__dirname, 'content'),
-      template: path.join(__dirname, 'template'),
-      theme: path.join(__dirname, 'theme'),
-      gzip: undefined
+      contentDir: path.join(__dirname, 'content'),
+      templateDir: path.join(__dirname, 'template'),
+      themeDir: path.join(__dirname, 'theme'),
+      extraInfo: undefined
     })
     expect(command([
       'node', 'eyebrow',
@@ -207,16 +208,103 @@ describe('eyebrow', () => {
       '-c', 'test/config/content',
       '-t', 'test/config/template',
       '-e', 'test/config/theme',
-      '-g', 'test/config/gzip'
+      '-x', 'extra info'
     ], options)).to.deep.equal({
       key: PRIVATE_KEY_TEST,
       cert: CERTIFICATE_TEST,
       port: '8080',
       httpsPort: '8443',
-      content: 'test/config/content',
-      template: 'test/config/template',
-      theme: 'test/config/theme',
-      gzip: 'test/config/gzip'
+      contentDir: 'test/config/content',
+      templateDir: 'test/config/template',
+      themeDir: 'test/config/theme',
+      extraInfo: 'extra info'
     })
+    expect(command([
+      'node', 'eyebrow',
+      '--cert', 'test/config/certificate.pem',
+      '--key', 'test/config/private.key',
+      '--port', '8080',
+      '--https-port', '8443',
+      '--content', 'test/config/content',
+      '--template', 'test/config/template',
+      '--theme', 'test/config/theme',
+      '--extra-info', 'extra info'
+    ], options)).to.deep.equal({
+      key: PRIVATE_KEY_TEST,
+      cert: CERTIFICATE_TEST,
+      port: '8080',
+      httpsPort: '8443',
+      contentDir: 'test/config/content',
+      templateDir: 'test/config/template',
+      themeDir: 'test/config/theme',
+      extraInfo: 'extra info'
+    })
+  })
+
+  it('handles an error opening a search index', async () => {
+    const error = new Error('Test Error')
+    const searchIndex = sandbox.stub(search, 'searchIndex').callsFake((opts, cb) => {
+      cb(error)
+    })
+    let caught = false
+    try {
+      await search.open(path.join(__dirname, 'test', 'search'))
+    } catch (e) {
+      caught = true
+      expect(e).to.equal(error)
+      expect(searchIndex.callCount).to.equal(1)
+    }
+    expect(caught).to.be.true()
+  })
+
+  it('handles an error closing a search index', async () => {
+    const searchDb = await search.open(path.join(__dirname, 'test', 'search'))
+    const error = new Error('Test Error')
+    const origIndex = searchDb._index
+    const close = sandbox.stub(searchDb._index, 'close').callsFake((cb) => {
+      cb(error)
+    })
+    let caught = false
+    try {
+      await searchDb.close()
+    } catch (e) {
+      expect(e).to.equal(error)
+      caught = true
+      expect(close.callCount).to.equal(1)
+    }
+    expect(caught).to.be.true()
+    sandbox.restore()
+    await new Promise((resolve, reject) => {
+      origIndex.close((err) => {
+        if (err) {
+          return reject(err)
+        }
+        resolve()
+      })
+    })
+  })
+
+  it('builds a search index', async () => {
+    const searchDb = await search.open(path.join(__dirname, 'test', 'search'))
+    log(searchDb)
+    await searchDb.index([{
+      id: '3',
+      body: 'this doc has a great body'
+    }])
+    const successMatches = await searchDb.search({
+      query: {
+        AND: {'*': ['body']}
+      }
+    })
+    expect(successMatches.length).to.equal(1)
+    expect(parseInt(successMatches[0].id)).to.equal(3)
+    const failureMatches = await searchDb.search({
+      query: {
+        AND: {'*': ['james']}
+      }
+    })
+    expect(failureMatches.length).to.equal(0)
+    await searchDb.close()
+    expect(searchDb._index).to.equal('index closed')
   })
 })

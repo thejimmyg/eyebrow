@@ -4,8 +4,8 @@
   "description": "Simplest possible site software",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test nyc -x '*.spec.js' mocha '*.spec.js'",
-    "test:quick": "NODE_ENV=test mocha '*.spec.js'",
+    "test": "rm -rf test/search && NODE_ENV=test nyc -x '*.spec.js' mocha '*.spec.js'",
+    "test:quick": "rm -rf test/search && NODE_ENV=test mocha '*.spec.js'",
     "start": "node start.js",
     "lint": "standard",
     "fix": "npm run lint -- --fix"
@@ -45,6 +45,7 @@
     "express": "^4.15.2",
     "libxmljs": "^0.18.4",
     "mustache": "^2.3.0",
+    "search-index": "^0.11.0",
     "spdy": "^3.4.4"
   }
 }
