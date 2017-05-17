@@ -4,6 +4,7 @@ const markdown = require('./markdown')
 const template = require('./template')
 const command = require('./command')
 const search = require('./search')
+const run = require('./run')
 
 var chai = require('chai')
 var dirtyChai = require('dirty-chai')
@@ -306,5 +307,17 @@ describe('eyebrow', () => {
     expect(failureMatches.length).to.equal(0)
     await searchDb.close()
     expect(searchDb._index).to.equal('index closed')
+  })
+
+  it('runs a rst command', async () => {
+    const [code, out] = await run(['python', 'rst.py', 'test/input.rst'])
+    expect(code).to.equal(0)
+    expect(out).to.equal(`<h1 class="title">One</h1>
+<p>Hello <em>world</em>:</p>
+<pre class="literal-block">
+Code
+</pre>
+`)
+    // await run(['exit', '2'])
   })
 })
