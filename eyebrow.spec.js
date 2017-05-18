@@ -310,13 +310,17 @@ describe('eyebrow', () => {
   })
 
   it('runs a rst command', async () => {
-    const [code, out] = await run(['python', 'rst.py', 'test/input.rst'])
+    const [code, out] = await run(['python', 'rst.py'], `One
+===
+
+Hello *world*::
+
+  Code
+`)
     expect(code).to.equal(0)
     expect(out).to.equal(`<h1 class="title">One</h1>
 <p>Hello <em>world</em>:</p>
-<pre class="literal-block">
-Code
-</pre>
+<pre class="literal-block">Code</pre>
 `)
     // await run(['exit', '2'])
   })

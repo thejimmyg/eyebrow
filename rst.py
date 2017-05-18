@@ -19,9 +19,8 @@ class IgnoreIndex(Directive):
 
 directives.register_directive('index', IgnoreIndex)
 
-with open(sys.argv[1], 'rb') as fp:
-    value = fp.read()
-    parts = publish_parts(source=value, writer_name="html4css1", settings_overrides={})
-    sys.stdout.write(parts["html_title"].encode(parts['encoding']))
-    sys.stdout.write(parts["fragment"].encode(parts['encoding']))
-    sys.stdout.write(parts["footer"].encode(parts['encoding']))
+value = sys.stdin.read()
+parts = publish_parts(source=value, writer_name="html5", settings_overrides={})
+sys.stdout.write(parts["html_title"].encode(parts['encoding']))
+sys.stdout.write(parts["fragment"].encode(parts['encoding']))
+sys.stdout.write(parts["footer"].encode(parts['encoding']))

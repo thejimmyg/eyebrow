@@ -1,6 +1,0 @@
-One
-===
-
-Hello *world*::
-
-  Code
