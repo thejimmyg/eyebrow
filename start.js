@@ -62,18 +62,17 @@ if (corsDir) {
 app.get('*', async (req, res, next) => {
   console.log(req.url)
   const contentPath = req.url.substring(1, req.url.length)
+  const contentFile = path.join(contentDir, contentPath + '.page')
   let stat
   try {
-    stat = fs.statSync(path.join(contentDir, contentPath))
+    stat = fs.statSync(contentFile)
   } catch (e) {
     return next()
   }
-  let result
-  if (stat.isDirectory()) {
-    result = await parse(path.join(contentDir, contentPath, 'index'), ['content'])
-  } else {
-    result = await parse(path.join(contentDir, contentPath), ['content'])
+  if (!stat.isFile()) {
+    return next()
   }
+  const result = await parse(contentFile, ['content'])
   const {type, title, heading, content} = result
   const view = {
     title,
@@ -85,6 +84,9 @@ app.get('*', async (req, res, next) => {
         switch (type) {
           case 'markdown':
             result += markdownRender(value)
+            break
+          case 'paragraph':
+            result += value
             break
           default:
             throw new Error(`Unknown block type ${type} in region 'content'`)
