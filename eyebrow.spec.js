@@ -154,13 +154,13 @@ describe('eyebrow', () => {
     })
     expect(command([
       'node', 'eyebrow',
-      '-r', 'test/config/certificate.pem',
-      '-k', 'test/config/private.key',
-      '-p', '8080',
-      '-s', '8443',
-      '-c', 'test/config/content',
-      '-t', 'test/config/template',
-      '-e', 'test/config/theme'
+      '--cert', 'test/config/certificate.pem',
+      '--key', 'test/config/private.key',
+      '--port', '8080',
+      '--https-port', '8443',
+      '--content', 'test/config/content',
+      '--template', 'test/config/template',
+      '--theme', 'test/config/theme',
     ])).to.deep.equal({
       key: PRIVATE_KEY_TEST,
       cert: CERTIFICATE_TEST,
@@ -183,7 +183,7 @@ describe('eyebrow', () => {
   it('parses command line arguments correctly with extra options and processed result', () => {
     const options = {
       addExtraOptions (program) {
-        program.option('-x, --extra-info [dir]', `Extra information`)
+        program.option('--extra-info [dir]', `Extra information`)
       },
       processResult (program, result) {
         // Mutate the result object as you wish
@@ -199,26 +199,6 @@ describe('eyebrow', () => {
       templateDir: path.join(__dirname, 'template'),
       themeDir: path.join(__dirname, 'theme'),
       extraInfo: undefined
-    })
-    expect(command([
-      'node', 'eyebrow',
-      '-r', 'test/config/certificate.pem',
-      '-k', 'test/config/private.key',
-      '-p', '8080',
-      '-s', '8443',
-      '-c', 'test/config/content',
-      '-t', 'test/config/template',
-      '-e', 'test/config/theme',
-      '-x', 'extra info'
-    ], options)).to.deep.equal({
-      key: PRIVATE_KEY_TEST,
-      cert: CERTIFICATE_TEST,
-      port: '8080',
-      httpsPort: '8443',
-      contentDir: 'test/config/content',
-      templateDir: 'test/config/template',
-      themeDir: 'test/config/theme',
-      extraInfo: 'extra info'
     })
     expect(command([
       'node', 'eyebrow',

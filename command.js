@@ -7,13 +7,13 @@ module.exports = (args, options) => {
   const program = new Command()
   program
   .version('0.1.0')
-  .option('-k, --key [path]', 'Path to the HTTPS private key, defaults to private.key in the current directory')
-  .option('-r, --cert [path]', 'Path to the HTTPS certificate, defaults to certificate.pem in the current directory')
-  .option('-p, --port [port]', 'Port for HTTP, defaults to 80')
-  .option('-s, --https-port [port]', 'Port for HTTPS, defaults to 443')
-  .option('-c, --content [dir]', `Directory to serve content files such as pages from, defaults to './content'`)
-  .option('-t, --template [dir]', `Directory to serve mustache templates from, defaults to './template'`)
-  .option('-e, --theme [dir]', `Directory to serve static files for the theme from, defaults to './theme'`)
+  .option('--key [path]', 'Path to the HTTPS private key, defaults to private.key in the current directory')
+  .option('--cert [path]', 'Path to the HTTPS certificate, defaults to certificate.pem in the current directory')
+  .option('--port [port]', 'Port for HTTP, defaults to 80')
+  .option('--https-port [port]', 'Port for HTTPS, defaults to 443')
+  .option('--content [dir]', `Directory to serve content files such as pages from, defaults to './content'`)
+  .option('--template [dir]', `Directory to serve mustache templates from, defaults to './template'`)
+  .option('--theme [dir]', `Directory to serve static files for the theme from, defaults to './theme'`)
   if (addExtraOptions) {
     addExtraOptions(program)
   }
