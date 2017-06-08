@@ -34,7 +34,7 @@ module.exports = async function (path, regions) {
               for (let j = 0; j < blocks.length; j++) {
                 const block = blocks[j]
                 if (block.name() !== 'text') {
-                  result[regionName].push([block.name(), block.text()])
+                  result[regionName].push([block.name(), block])
                 }
               }
             }
