@@ -1,7 +1,7 @@
 const parse = require('./parse')
 const path = require('path')
 const markdown = require('./markdown')
-const template = require('./template')
+const Template = require('./template')
 const command = require('./command')
 const search = require('./search')
 const run = require('./run')
@@ -66,14 +66,18 @@ describe('eyebrow', () => {
   })
 
   const EXPECTED_MARKDOWN = '\n# Heading\n\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
-  it('correctly parses test/index', async () => {
+  it('correctly parses test/content/index', async () => {
     const result = await parse(path.join(__dirname, 'test', 'content', 'index'), ['content'])
     expect(Object.keys(result).sort()).to.deep.equal(['type', 'title', 'heading', 'content'].sort())
     const {type, title, heading, content} = result
     expect(title).to.equal(`Tove`)
     expect(type).to.equal(`page`)
     expect(heading).to.equal(`Hello`)
-    expect(content).to.deep.equal([['markdown', EXPECTED_MARKDOWN]])
+    log(content)
+    expect(content.length).to.equal(1)
+    expect(content[0].length).to.equal(2)
+    expect(content[0][0]).to.equal('markdown')
+    expect(content[0][1].text()).to.equal(EXPECTED_MARKDOWN)
   })
 
   it('correctly converts markdown to HTML', () => {
@@ -83,14 +87,27 @@ describe('eyebrow', () => {
 
   it('cannot render a template that does not exist', async () => {
     let caught = false
+    const template = new Template()
     try {
-      await template(path.join(__dirname, 'test', 'template', 'doesnotexist.mustache'))
+      await template.render(path.join(__dirname, 'test', 'template', 'doesnotexist.mustache'))
     } catch (e) {
       caught = true
       expect(e.message).to.equal(`ENOENT: no such file or directory, open '${__dirname}/test/template/doesnotexist.mustache'`)
     }
     expect(caught).to.be.true()
   })
+
+  // it('cannot load a partials dir that does not exist', async () => {
+  //   let caught = false
+  //   const template = new Template()
+  //   try {
+  //     await template.loadPartials(123)
+  //   } catch (e) {
+  //     caught = true
+  //     expect(e.message).to.equal(`Path must be a string. Received 123`)
+  //   }
+  //   expect(caught).to.be.true()
+  // })
 
   it('correctly renders the main template', async () => {
     const view = {
@@ -100,7 +117,9 @@ describe('eyebrow', () => {
         return markdown(EXPECTED_MARKDOWN)
       }
     }
-    const output = await template(path.join(__dirname, 'test', 'template', 'page.mustache'), view)
+    const template = new Template()
+    await template.loadPartials(path.join(__dirname, 'test', 'template', 'partials'))
+    const output = await template.render(path.join(__dirname, 'test', 'template', 'page.mustache'), view)
     log(output)
     expect(output).to.equal(`<!DOCTYPE HTML PUBLIC>
 <html>
@@ -289,19 +308,9 @@ describe('eyebrow', () => {
     expect(searchDb._index).to.equal('index closed')
   })
 
-  it('runs a rst command', async () => {
-    const [code, out] = await run(['python', 'rst.py'], `One
-===
-
-Hello *world*::
-
-  Code
-`)
+  it('runs a command', async () => {
+    const [code, out] = await run(['cat'], `hi`)
     expect(code).to.equal(0)
-    expect(out).to.equal(`<h1 class="title">One</h1>
-<p>Hello <em>world</em>:</p>
-<pre class="literal-block">Code</pre>
-`)
-    // await run(['exit', '2'])
+    expect(out).to.equal(`hi`)
   })
 })
