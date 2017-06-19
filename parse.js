@@ -41,6 +41,7 @@ module.exports = async function (path, regions) {
         }
       }
       result.type = root.name()
+      result.root = root
       resolve(result)
     })
   })

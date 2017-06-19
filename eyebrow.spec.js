@@ -68,7 +68,7 @@ describe('eyebrow', () => {
   const EXPECTED_MARKDOWN = '\n# Heading\n\nHello world! How *are* you today.\n\nHere are some tricky characters: <>&;\'"汉漢!?[]/.,\n'
   it('correctly parses test/content/index', async () => {
     const result = await parse(path.join(__dirname, 'test', 'content', 'index'), ['content'])
-    expect(Object.keys(result).sort()).to.deep.equal(['type', 'title', 'heading', 'content'].sort())
+    expect(Object.keys(result).sort()).to.deep.equal(['type', 'title', 'heading', 'content', 'root'].sort())
     const {type, title, heading, content} = result
     expect(title).to.equal(`Tove`)
     expect(type).to.equal(`page`)
